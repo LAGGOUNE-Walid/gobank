@@ -1,0 +1,722 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>account: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/LAGGOUNE-Walid/gobank/account/accountService.go (90.0%)</option>
+				
+				<option value="file1">github.com/LAGGOUNE-Walid/gobank/api/api.go (77.6%)</option>
+				
+				<option value="file2">github.com/LAGGOUNE-Walid/gobank/main.go (0.0%)</option>
+				
+				<option value="file3">github.com/LAGGOUNE-Walid/gobank/storage/account.go (81.0%)</option>
+				
+				<option value="file4">github.com/LAGGOUNE-Walid/gobank/storage/memory.go (71.4%)</option>
+				
+				<option value="file5">github.com/LAGGOUNE-Walid/gobank/storage/sqlite.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package account
+
+import (
+        "fmt"
+        "math/rand"
+        "time"
+
+        "golang.org/x/crypto/bcrypt"
+)
+
+type Entity struct {
+        ID        int       `json:"id"`
+        Username  string    `json:"username"`
+        Password  string    `json:"-"`
+        Firstname string    `json:"firstname"`
+        Lastname  string    `json:"lastname"`
+        Number    int       `json:"number"`
+        Balance   int       `json:"balance"`
+        CreatedAt time.Time `json:"created_at"`
+}
+
+type CreateRequest struct {
+        Username  string `json:"username"`
+        Password  string `json:"password"`
+        Firstname string `json:"firstname"`
+        Lastname  string `json:"lastname"`
+}
+
+type CreateResponse struct {
+        ID int `json:"id"`
+}
+
+type Response struct {
+        Data  []Entity `json:"data"`
+        Page  int      `json:"page"`
+        Limit int      `json:"limit"`
+        Total int      `json:"total"`
+}
+
+type LoginRequest struct {
+        Username string `json:"username"`
+        Password string `json:"password"`
+}
+
+type LoginResponse struct {
+        ID    int    `json:"id"`
+        Token string `json:"token"`
+}
+
+type TransferRequest struct {
+        To     int `json:"to"`
+        Ammout int `json:"ammount"`
+}
+
+func New(username string, password string, firstname string, lastname string) (*Entity, error) <span class="cov6" title="2">{
+        if len(username) == 0 || len(password) == 0 || len(firstname) == 0 || len(lastname) == 0 </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("firstname or lastname validation failed")
+        }</span>
+        <span class="cov1" title="1">passwordHashed, err := HashPassword(password)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to hash your password :(")
+        }</span>
+        <span class="cov1" title="1">return &amp;Entity{
+                Username:  username,
+                Firstname: firstname,
+                Lastname:  lastname,
+                Password:  passwordHashed,
+                Number:    rand.Intn(10000),
+                CreatedAt: time.Now().UTC(),
+        }, nil</span>
+}
+
+func HashPassword(password string) (string, error) <span class="cov10" title="3">{
+        bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        return string(bytes), err
+}</span>
+
+func CheckPasswordHash(password, hash string) bool <span class="cov6" title="2">{
+        err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+        return err == nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package api
+
+import (
+        "context"
+        "encoding/json"
+        "fmt"
+        "net/http"
+        "strconv"
+        "time"
+
+        "github.com/LAGGOUNE-Walid/gobank/account"
+        "github.com/LAGGOUNE-Walid/gobank/storage"
+        "github.com/golang-jwt/jwt/v5"
+)
+
+var secretKey = []byte("fake-secret-key")
+
+type contextKey string
+
+const userIDKey = contextKey("userID")
+
+type Server struct {
+        addr  string
+        store storage.AccountStore
+}
+
+type ApiError struct {
+        Error string
+}
+
+type apiFunc func(http.ResponseWriter, *http.Request) error
+
+func (s *Server) Run() <span class="cov0" title="0">{
+        mux := s.Routes()
+        http.ListenAndServe(s.addr, mux)
+}</span>
+
+func (s *Server) Routes() *http.ServeMux <span class="cov6" title="12">{
+        mux := http.NewServeMux()
+        mux.HandleFunc("/account", makeHttpHandlerFunc(s.handleAccount))
+        mux.HandleFunc("/account/{id}", makeHttpHandlerFunc(WithAuth(s.handleSingleAccount)))
+        mux.HandleFunc("/transfer", makeHttpHandlerFunc(WithAuth(s.handleTransferAccount)))
+        mux.HandleFunc("/login", makeHttpHandlerFunc(s.handleLogin))
+        return mux
+}</span>
+
+func NewServer(addr string, store storage.AccountStore) *Server <span class="cov4" title="5">{
+        return &amp;Server{
+                addr:  addr,
+                store: store,
+        }
+}</span>
+
+func (s *Server) handleAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov5" title="7">{
+        if request.Method == "GET" </span><span class="cov4" title="4">{
+                return s.handleGetAccounts(writer, request)
+        }</span>
+        <span class="cov3" title="3">if request.Method == "POST" </span><span class="cov3" title="3">{
+                return s.handleCreateAccount(writer, request)
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Errorf("HTTP method not allowed %s", request.Method)</span>
+}
+
+func (s *Server) handleGetAccounts(writer http.ResponseWriter, request *http.Request) error <span class="cov4" title="4">{
+        pageQuery := request.URL.Query().Get("page")
+        page, err := stringToInt(pageQuery)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov4" title="4">accounts, err := s.store.All(20, page)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov4" title="4">return writeJson(writer, http.StatusOK, accounts)</span>
+}
+
+func (s *Server) handleSingleAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov3" title="3">{
+        if request.Method == "DELETE" </span><span class="cov2" title="2">{
+                return s.handleDeleteAccount(writer, request)
+        }</span>
+        <span class="cov1" title="1">if request.Method == "GET" </span><span class="cov1" title="1">{
+                return s.handleGetAccount(writer, request)
+        }</span>
+
+        <span class="cov0" title="0">return fmt.Errorf("HTTP method not allowed %s", request.Method)</span>
+}
+
+func (s *Server) handleGetAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov1" title="1">{
+        id, err := stringToInt(request.PathValue("id"))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov1" title="1">if id != request.Context().Value(userIDKey) </span><span class="cov0" title="0">{
+                return writeJson(writer, http.StatusUnauthorized, nil)
+        }</span>
+        <span class="cov1" title="1">account, err := s.store.Find(id)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov1" title="1">return writeJson(writer, http.StatusOK, account)</span>
+}
+
+func (s *Server) handleCreateAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov3" title="3">{
+        createAccountRequest := new(account.CreateRequest)
+        if err := json.NewDecoder(request.Body).Decode(createAccountRequest); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov3" title="3">accountEntity, err := account.New(createAccountRequest.Username, createAccountRequest.Password, createAccountRequest.Firstname, createAccountRequest.Lastname)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov3" title="3">id, err := s.store.Create(accountEntity)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov3" title="3">return writeJson(writer, http.StatusCreated, account.CreateResponse{ID: id})</span>
+}
+
+func (s *Server) handleDeleteAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov2" title="2">{
+        id, err := stringToInt(request.PathValue("id"))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov2" title="2">if id != request.Context().Value(userIDKey) </span><span class="cov1" title="1">{
+                return writeJson(writer, http.StatusUnauthorized, nil)
+        }</span>
+
+        <span class="cov1" title="1">s.store.Delete(id)
+        return writeJson(writer, http.StatusCreated, nil)</span>
+}
+
+func (s *Server) handleTransferAccount(writer http.ResponseWriter, request *http.Request) error <span class="cov4" title="5">{
+        transferRequest := new(account.TransferRequest)
+        if request.Method != "POST" </span><span class="cov0" title="0">{
+                return fmt.Errorf("not supported %s method , only POST method supported", request.Method)
+        }</span>
+        <span class="cov4" title="5">if err := json.NewDecoder(request.Body).Decode(&amp;transferRequest); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov4" title="5">if transferRequest.Ammout &lt;= 0 </span><span class="cov1" title="1">{
+                return fmt.Errorf("can't transfer ammount &lt;= 0")
+        }</span>
+        <span class="cov4" title="4">err := s.store.Transfer(transferRequest.To, request.Context().Value(userIDKey).(int), transferRequest.Ammout)
+        if err != nil </span><span class="cov3" title="3">{
+                return err
+        }</span>
+        <span class="cov1" title="1">return writeJson(writer, http.StatusCreated, "")</span>
+}
+
+func (s *Server) handleLogin(writer http.ResponseWriter, request *http.Request) error <span class="cov3" title="3">{
+        var loginRequest account.LoginRequest
+        if request.Method != "POST" </span><span class="cov0" title="0">{
+                return fmt.Errorf("not supported %s method , only POST method supported", request.Method)
+        }</span>
+        <span class="cov3" title="3">if err := json.NewDecoder(request.Body).Decode(&amp;loginRequest); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov3" title="3">user, err := s.store.Login(loginRequest.Username, loginRequest.Password)
+        if err != nil </span><span class="cov2" title="2">{
+                return writeJson(writer, http.StatusBadRequest, "invalid credentials")
+        }</span>
+        <span class="cov1" title="1">tokenString, err := createToken(user.ID, user.Username)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov1" title="1">return writeJson(writer, http.StatusOK, account.LoginResponse{Token: tokenString, ID: user.ID})</span>
+}
+
+func makeHttpHandlerFunc(f apiFunc) http.HandlerFunc <span class="cov10" title="48">{
+        return func(writer http.ResponseWriter, request *http.Request) </span><span class="cov7" title="18">{
+                defer request.Body.Close()
+                if err := f(writer, request); err != nil </span><span class="cov4" title="4">{
+                        writeJson(writer, http.StatusBadRequest, ApiError{Error: err.Error()})
+                }</span>
+        }
+}
+
+func WithAuth(next apiFunc) apiFunc <span class="cov8" title="24">{
+        return func(w http.ResponseWriter, r *http.Request) error </span><span class="cov5" title="8">{
+                tokenString := r.Header.Get("Authorization")
+                if tokenString == "" </span><span class="cov0" title="0">{
+                        return fmt.Errorf("missing authorization header")
+                }</span>
+
+                <span class="cov5" title="8">tokenString = tokenString[len("Bearer "):]
+                userID, err := verifyToken(tokenString)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov5" title="8">ctx := context.WithValue(r.Context(), userIDKey, userID)
+                r = r.WithContext(ctx)
+                return next(w, r)</span>
+        }
+}
+
+func writeJson(writer http.ResponseWriter, status int, v any) error <span class="cov7" title="18">{
+        writer.Header().Set("Content-Type", "application/json")
+        writer.WriteHeader(status)
+        return json.NewEncoder(writer).Encode(v)
+}</span>
+
+func stringToInt(v string) (int, error) <span class="cov5" title="7">{
+        if newV, err := strconv.Atoi(v); err == nil &amp;&amp; newV &gt; 0 </span><span class="cov5" title="7">{
+                return newV, nil
+        }</span>
+        <span class="cov0" title="0">return 0, fmt.Errorf("failed to convert %s to integer", v)</span>
+}
+
+func createToken(id int, username string) (string, error) <span class="cov5" title="6">{
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+                jwt.MapClaims{
+                        "username": username,
+                        "id":       id,
+                        "exp":      time.Now().Add(time.Hour * 24).Unix(),
+                })
+
+        tokenString, err := token.SignedString(secretKey)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov5" title="6">return tokenString, nil</span>
+}
+
+func verifyToken(tokenString string) (userID int, err error) <span class="cov5" title="8">{
+        token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) </span><span class="cov5" title="8">{
+                return secretKey, nil
+        }</span>)
+
+        <span class="cov5" title="8">if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+
+        <span class="cov5" title="8">if !token.Valid </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("invalid token")
+        }</span>
+
+        <span class="cov5" title="8">claims, ok := token.Claims.(jwt.MapClaims)
+        if !ok </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("cannot parse claims")
+        }</span>
+
+        <span class="cov5" title="8">id, ok := claims["id"].(float64)
+        if !ok </span><span class="cov0" title="0">{
+                return 0, fmt.Errorf("user_id not found in token")
+        }</span>
+        <span class="cov5" title="8">userID = int(id)
+        return userID, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "log"
+
+        "github.com/LAGGOUNE-Walid/gobank/api"
+        "github.com/LAGGOUNE-Walid/gobank/storage"
+)
+
+func main() <span class="cov0" title="0">{
+        store, err := storage.NewSqliteStore()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+
+        <span class="cov0" title="0">server := api.NewServer("0.0.0.0:8081", store)
+        server.Run()</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package storage
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+
+        "github.com/LAGGOUNE-Walid/gobank/account"
+)
+
+type AccountStore interface {
+        All(limit int, page int) (account.Response, error)
+        Find(id int) (account *account.Entity, err error)
+        Create(*account.Entity) (int, error)
+        Delete(id int) error
+        Transfer(to int, from int, ammout int) error
+        Login(username string, password string) (*account.Entity, error)
+}
+
+func (store *SqliteStore) All(limit int, page int) (response account.Response, err error) <span class="cov5" title="3">{
+        if limit &lt;= 0 || limit &gt;= 50 </span><span class="cov1" title="1">{
+                limit = 10
+        }</span>
+        <span class="cov5" title="3">if page &lt;= 0 </span><span class="cov1" title="1">{
+                page = 1
+        }</span>
+
+        <span class="cov5" title="3">offset := (page - 1) * limit
+
+        var total int
+        if err := store.db.QueryRow("SELECT COUNT(*) FROM accounts").Scan(&amp;total); err != nil </span><span class="cov0" title="0">{
+                return account.Response{}, err
+        }</span>
+
+        <span class="cov5" title="3">rows, err := store.db.Query(`
+                SELECT id, username, firstname, lastname, balance, number, created_at
+                FROM accounts
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+        `, limit, offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return account.Response{}, err
+        }</span>
+        <span class="cov5" title="3">defer rows.Close()
+
+        accounts := []account.Entity{}
+        for rows.Next() </span><span class="cov6" title="4">{
+                var accountEntity account.Entity
+                if err := rows.Scan(
+                        &amp;accountEntity.ID,
+                        &amp;accountEntity.Username,
+                        &amp;accountEntity.Firstname,
+                        &amp;accountEntity.Lastname,
+                        &amp;accountEntity.Balance,
+                        &amp;accountEntity.Number,
+                        &amp;accountEntity.CreatedAt,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return account.Response{}, err
+                }</span>
+                <span class="cov6" title="4">accounts = append(accounts, accountEntity)</span>
+        }
+
+        <span class="cov5" title="3">return account.Response{
+                Data:  accounts,
+                Page:  page,
+                Limit: limit,
+                Total: total,
+        }, nil</span>
+}
+
+func (store *SqliteStore) Login(username string, password string) (*account.Entity, error) <span class="cov3" title="2">{
+        var accountEntity account.Entity
+        query := `SELECT id, username, password FROM accounts WHERE username = ? LIMIT 1`
+
+        row := store.db.QueryRow(query, username)
+        err := row.Scan(&amp;accountEntity.ID, &amp;accountEntity.Username, &amp;accountEntity.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov3" title="2">if !account.CheckPasswordHash(password, accountEntity.Password) </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("invalid password")
+        }</span>
+        <span class="cov1" title="1">return &amp;accountEntity, nil</span>
+}
+
+func (store *SqliteStore) Find(id int) (*account.Entity, error) <span class="cov8" title="7">{
+        var accountEntity account.Entity
+        query := `SELECT id, username, firstname, lastname, number, balance, created_at FROM accounts WHERE id = ? LIMIT 1`
+        row := store.db.QueryRow(query, id)
+        err := row.Scan(&amp;accountEntity.ID, &amp;accountEntity.Username, &amp;accountEntity.Firstname, &amp;accountEntity.Lastname, &amp;accountEntity.Number, &amp;accountEntity.Balance, &amp;accountEntity.CreatedAt)
+        if err != nil </span><span class="cov3" title="2">{
+                if err == sql.ErrNoRows </span><span class="cov3" title="2">{
+                        return nil, fmt.Errorf("no record by id %d", id)
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov7" title="5">return &amp;accountEntity, nil</span>
+}
+
+func (store *SqliteStore) FindByNumber(number int) (*account.Entity, error) <span class="cov7" title="5">{
+        var accountEntity account.Entity
+        query := `SELECT id, username, firstname, lastname, number, balance, created_at FROM accounts WHERE number = ? LIMIT 1`
+        row := store.db.QueryRow(query, number)
+        err := row.Scan(&amp;accountEntity.ID, &amp;accountEntity.Username, &amp;accountEntity.Firstname, &amp;accountEntity.Lastname, &amp;accountEntity.Number, &amp;accountEntity.Balance, &amp;accountEntity.CreatedAt)
+        if err != nil </span><span class="cov1" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("no record by account number %d", number)
+                }</span>
+                <span class="cov0" title="0">return nil, err</span>
+        }
+
+        <span class="cov6" title="4">return &amp;accountEntity, nil</span>
+}
+
+func (store *SqliteStore) Create(acc *account.Entity) (int, error) <span class="cov10" title="10">{
+        result, err := store.db.Exec("INSERT INTO accounts(username, firstname, lastname, number, balance, password, created_at) values (?,?,?,?,?,?,?)", acc.Username, acc.Firstname, acc.Lastname, acc.Number, acc.Balance, acc.Password, acc.CreatedAt)
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+        <span class="cov10" title="10">lastInsertID, err := result.LastInsertId()
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+        <span class="cov10" title="10">acc.ID = int(lastInsertID)
+        return acc.ID, nil</span>
+}
+
+func (store *SqliteStore) Delete(id int) error <span class="cov1" title="1">{
+        query := `DELETE FROM accounts where id = ?`
+        if _, err := store.db.Exec(query, id); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov1" title="1">return nil</span>
+}
+
+func (store *SqliteStore) Transfer(to int, from int, ammount int) error <span class="cov3" title="2">{
+        tx, err := store.db.BeginTx(context.Background(), nil)
+
+        defer tx.Rollback()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov3" title="2">toAccount, err := store.FindByNumber(to)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov3" title="2">fromAccount, err := store.Find(from)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov3" title="2">if fromAccount.Balance-ammount &lt; 0 </span><span class="cov1" title="1">{
+                return fmt.Errorf("you don't have enough credit to do this transaction")
+        }</span>
+
+        <span class="cov1" title="1">_, err = tx.ExecContext(context.Background(), "UPDATE accounts SET balance = balance + ? WHERE number = ?",
+                ammount, toAccount.Number)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov1" title="1">_, err = tx.ExecContext(context.Background(), "UPDATE accounts SET balance = balance - ? WHERE number = ?",
+                ammount, fromAccount.Number)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov1" title="1">if err = tx.Commit(); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov1" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package storage
+
+import (
+        "database/sql"
+        "testing"
+
+        "github.com/golang-migrate/migrate/v4"
+        _ "github.com/golang-migrate/migrate/v4/database/sqlite"
+        "github.com/golang-migrate/migrate/v4/database/sqlite3"
+        _ "github.com/golang-migrate/migrate/v4/source/file"
+        _ "github.com/mattn/go-sqlite3"
+)
+
+// SetupTestDB sets up a test SQLite in-memory database with migrations applied.
+func SetupTestDB(t *testing.T) *SqliteStore <span class="cov10" title="6">{
+        db, err := sql.Open("sqlite3", "file::memory:?cache=shared")
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal("failed to open database:", err)
+        }</span>
+
+        <span class="cov10" title="6">driver, err := sqlite3.WithInstance(db, &amp;sqlite3.Config{})
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal("failed to create database instance:", err)
+        }</span>
+
+        <span class="cov10" title="6">m, err := migrate.NewWithDatabaseInstance(
+                "file://../migrations",
+                "sqlite3", driver)
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatal("failed to initialize migrate:", err)
+        }</span>
+
+        <span class="cov10" title="6">m.Down() // refresh
+        if err := m.Up(); err != nil &amp;&amp; err != migrate.ErrNoChange </span><span class="cov0" title="0">{
+                t.Fatal("failed to apply migrations:", err)
+        }</span>
+
+        <span class="cov10" title="6">store := &amp;SqliteStore{db: db}
+
+        return store</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package storage
+
+import (
+        "database/sql"
+        "log"
+
+        _ "github.com/mattn/go-sqlite3"
+)
+
+type SqliteStore struct {
+        db *sql.DB
+}
+
+func NewSqliteStore() (*SqliteStore, error) <span class="cov0" title="0">{
+        connection, err := sql.Open("sqlite3", "./db/database.sqlite")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">err = connection.Ping()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatalf("Error connecting database: %v\n", err)
+        }</span>
+        <span class="cov0" title="0">return &amp;SqliteStore{db: connection}, nil</span>
+
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -1,0 +1,13 @@
+# Go binaries
+bin/
+*.exe
+*.exe~
+*.out
+*.test
+
+.go/
+
+.vscode/
+
+db/database.sqlite
+
