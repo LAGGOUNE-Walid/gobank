@@ -13,6 +13,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := api.NewServer("0.0.0.0:8081", store)
+	server := api.NewServer("0.0.0.0:8080", store)
 	server.Run()
 }

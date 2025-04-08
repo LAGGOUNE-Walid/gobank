@@ -1,9 +1,16 @@
 #!/bin/sh
+set -e
 
-# Run migrations
+mkdir -p /app/db
+
+if [ ! -f "/app/db/database.sqlite" ]; then
+    echo "Initializing database..."
+    touch /app/db/database.sqlite
+fi
+
+
 echo "Running migrations..."
-migrate -path ./migrations -database "sqlite3://file:./db/database.sqlite3" up
+migrate -path /app/migrations -database "sqlite3:///app/db/database.sqlite?x-no-tx-wrap=true" up
 
-# Start the Go application
-echo "Starting the application..."
-exec ./gobank
+echo "Starting application..."
+exec /app/gobank
