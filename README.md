@@ -76,7 +76,7 @@ The API will be available at `http://localhost:8081`.
 
 
 #### Get single Account  (Auth required)
-`DELETE /accounts/{id}`
+`GET /accounts/{id}`
 
 #### Delete Account  (Auth required)
 `DELETE /accounts/{id}`
