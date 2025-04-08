@@ -43,8 +43,10 @@ The API will be available at `http://localhost:8081`.
 **Request JSON**:
 ```json
 {
-  "username": "johndoe",
-  "password": "yourpassword"
+    "firstname" : "foo",
+    "lastname" : "bar",
+    "username" : "barfoo",
+    "password" : "foobar"
 }
 ```
 
